@@ -844,7 +844,7 @@
               <h1 class="hero-title">Mculator v1</h1>
 
               <p class="hero-subtitle">
-                حل داخلي مبتكر لأتمتة مراجعة التسعير، يهدف إلى تعزيز الدقة التشغيلية وتقليص المخاطر البشرية عبر مسارات عمل ذكية وتقارير شفافة وقابلة للتدقيق.
+                حل داخلي مبتكر لأتمتة مراجعة التسعير، يهدف إلى تعزيز الدقة التشغيلية تقليل الاخطاء البشرية عبر مسارات عمل ذكية وتقارير شفافة وقابلة للتدقيق.
               </p>
             </div>
 
@@ -903,7 +903,7 @@
             </div>
 
             <p class="form-hint">
-              اضغط على اسم المدينة لتحديدها. تأكد أن نفس الأسماء موجودة داخل قاعدة البيانات كما هي.
+              اضغط على اسم المدينة لتحديدها.
             </p>
           </div>
         </div>
@@ -920,7 +920,6 @@
           <label class="form-label" for="orderData">الصق بيانات الطلب</label>
           <textarea id="orderData" placeholder="الصق بيانات الطلب هنا"></textarea>
           <p class="form-hint">
-            يتم الاعتماد على نفس الترتيب الحالي للأعمدة المفصولة بـ Tab بدون أي تغيير.
           </p>
         </div>
 
@@ -931,7 +930,7 @@
               Variety Table (Fallback)
             </div>
 
-            <label class="form-label" for="fallbackInput">Fallback Table</label>
+            <label class="form-label" for="fallbackInput"> جدول الاحجام</label>
             <textarea id="fallbackInput" placeholder="ItemId    Size"></textarea>
             <p class="form-hint"></p>
           </div>
@@ -1251,17 +1250,53 @@
 
       if (!rawText) return;
 
-      rawText.split("\n").forEach((row, index) => {
-        const cols = row.split("\t");
-        if (cols.length < 4) return;
+      const lines = rawText
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean);
 
-        const itemId = (cols[0] || "").trim();
-        const addonName = (cols[2] || "").trim();
-        const qty = parseNumber(cols[3], 0);
+      if (!lines.length) return;
 
-        if (index === 0 && itemId.toLowerCase().includes("item id")) return;
+      let itemIdIndex = 0;
+      let addonNameIndex = 2;
+      let qtyIndex = 3;
+      let priceIndex = 4;
 
-        if (itemId && addonName && qty > 0) {
+      const headerCols = lines[0].split("\t").map(col => col.trim().toLowerCase());
+
+      const findHeaderIndex = (keywords) =>
+        headerCols.findIndex(col => keywords.some(keyword => col.includes(keyword)));
+
+      const detectedItemIdIndex = findHeaderIndex(["item id", "itemid", "id"]);
+      const detectedAddonNameIndex = findHeaderIndex(["addon", "option", "addition", "اضافة", "إضافة"]);
+      const detectedQtyIndex = findHeaderIndex(["qty", "quantity", "count", "عدد"]);
+      const detectedPriceIndex = findHeaderIndex(["price", "amount", "value", "سعر", "القيمة"]);
+
+      const hasHeader =
+        detectedItemIdIndex !== -1 ||
+        detectedAddonNameIndex !== -1 ||
+        detectedQtyIndex !== -1 ||
+        detectedPriceIndex !== -1;
+
+      if (hasHeader) {
+        if (detectedItemIdIndex !== -1) itemIdIndex = detectedItemIdIndex;
+        if (detectedAddonNameIndex !== -1) addonNameIndex = detectedAddonNameIndex;
+        if (detectedQtyIndex !== -1) qtyIndex = detectedQtyIndex;
+        if (detectedPriceIndex !== -1) priceIndex = detectedPriceIndex;
+      }
+
+      lines.forEach((row, index) => {
+        if (hasHeader && index === 0) return;
+
+        const cols = row.split("\t").map(col => col.trim());
+        if (!cols.length) return;
+
+        const itemId = (cols[itemIdIndex] || "").trim();
+        const addonName = (cols[addonNameIndex] || "").trim();
+        const qty = parseNumber(cols[qtyIndex], 0);
+        const addonSourcePrice = parseNumber(cols[priceIndex], 0);
+
+        if (itemId && addonName && qty > 0 && addonSourcePrice > 0) {
           if (!addonsMap[itemId]) {
             addonsMap[itemId] = 0;
           }

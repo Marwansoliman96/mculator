@@ -1209,6 +1209,12 @@
       }
     }
 
+    function itemAreaToPrice(area, area1Value, area2Value) {
+      const area1 = parseNumber(area1Value, 0);
+      const area2 = parseNumber(area2Value, 0);
+      return area === "Area1" ? area1 : area2;
+    }
+
     function getEmptyResultsMarkup() {
       return `
         <div class="empty-state">
@@ -1325,59 +1331,71 @@
       }
     }
 
-    function parseAddonsTable(rawText) {
-      addonsMap = {};
-      if (!rawText) return;
+    function getSpecialAddonUnitPrice(mealName, addonName, area) {
+      if (!dbLoaded || !db || !mealName || !addonName || !area) return null;
 
-      const lines = String(rawText)
-        .replace(/\r/g, "")
-        .split("\n")
-        .map((line) => cleanCell(line))
-        .filter(Boolean);
+      let stmt = null;
+      try {
+        stmt = db.prepare("SELECT Area1, Area2 FROM special_addons WHERE MealName=? AND AddonName=?");
+        stmt.bind([mealName, addonName]);
 
-      if (!lines.length) return;
-
-      let startIndex = 0;
-      if (isLikelyAddonsHeader(splitTsvRow(lines[0]))) {
-        startIndex = 1;
+        if (stmt.step()) {
+          const rowData = stmt.getAsObject();
+          const specialPrice = itemAreaToPrice(area, rowData.Area1, rowData.Area2);
+          return specialPrice > 0 ? specialPrice : null;
+        }
+      } catch (error) {
+        console.error("Failed to read special_addons for:", mealName, addonName, error);
+      } finally {
+        if (stmt) stmt.free();
       }
 
-      for (let index = startIndex; index < lines.length; index += 1) {
-        const cols = splitTsvRow(lines[index]);
-        if (cols.length < 5) continue;
-
-        const itemId = normalizeItemId(cols[0]);
-        const addonName = normalizeText(cols[2]);
-        const qty = parseNumber(cols[3], 0);
-        const addonSourcePrice = parseNumber(cols[4], 0);
-
-        if (!itemId || !addonName || qty <= 0) {
-          continue;
-        }
-
-        if (!addonsMap[itemId]) {
-          addonsMap[itemId] = {
-            addonQty: 0,
-            juiceQty: 0,
-            standardAddonQty: 0,
-            addonChargePerMeal: 0
-          };
-        }
-
-        if (isJuiceAddon(addonName)) {
-          addonsMap[itemId].addonQty += qty;
-          addonsMap[itemId].juiceQty += qty;
-          addonsMap[itemId].addonChargePerMeal += JUICE_UNIT_PRICE * qty;
-          continue;
-        }
-
-        if (addonSourcePrice > 0) {
-          addonsMap[itemId].addonQty += qty;
-          addonsMap[itemId].standardAddonQty += qty;
-          addonsMap[itemId].addonChargePerMeal += ADDON_UNIT_PRICE * qty;
-        }
-      }
+      return null;
     }
+
+    function parseAddonsTable(rawText) {
+  addonsMap = {};
+  if (!rawText) return;
+
+  const lines = String(rawText)
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => cleanCell(line))
+    .filter(Boolean);
+
+  if (!lines.length) return;
+
+  let startIndex = 0;
+  if (isLikelyAddonsHeader(splitTsvRow(lines[0]))) {
+    startIndex = 1;
+  }
+
+  for (let index = startIndex; index < lines.length; index += 1) {
+    const cols = splitTsvRow(lines[index]);
+    if (cols.length < 5) continue;
+
+    const itemId = normalizeItemId(cols[0]);
+    const addonName = normalizeText(cols[2]);
+    const qty = parseNumber(cols[3], 0);
+    const addonSourcePrice = parseNumber(cols[4], 0);
+
+    if (!itemId || !addonName || qty <= 0) {
+      continue;
+    }
+
+    if (!addonsMap[itemId]) {
+      addonsMap[itemId] = {
+        addons: []
+      };
+    }
+
+    addonsMap[itemId].addons.push({
+      addonName,
+      qty,
+      addonSourcePrice
+    });
+  }
+}
 
     function buildMainTable(orderRaw, city, area) {
       mainTable = [];
@@ -1475,11 +1493,34 @@
         }
 
         const addonData = addonsMap[item.itemId];
-        if (addonData) {
-          item.addonQty = addonData.addonQty;
-          item.juiceQty = addonData.juiceQty;
-          item.standardAddonQty = addonData.standardAddonQty;
-          item.addonPrice = addonData.addonChargePerMeal * item.quantity;
+        if (addonData && Array.isArray(addonData.addons)) {
+          let addonChargePerMeal = 0;
+
+          addonData.addons.forEach((addonRow) => {
+            const specialUnitPrice = getSpecialAddonUnitPrice(item.name, addonRow.addonName, item.area);
+
+            if (specialUnitPrice !== null) {
+              item.addonQty += addonRow.qty;
+              item.standardAddonQty += addonRow.qty;
+              addonChargePerMeal += specialUnitPrice * addonRow.qty;
+              return;
+            }
+
+            if (isJuiceAddon(addonRow.addonName)) {
+              item.addonQty += addonRow.qty;
+              item.juiceQty += addonRow.qty;
+              addonChargePerMeal += JUICE_UNIT_PRICE * addonRow.qty;
+              return;
+            }
+
+            if (addonRow.addonSourcePrice > 0) {
+              item.addonQty += addonRow.qty;
+              item.standardAddonQty += addonRow.qty;
+              addonChargePerMeal += ADDON_UNIT_PRICE * addonRow.qty;
+            }
+          });
+
+          item.addonPrice = addonChargePerMeal * item.quantity;
           item.finalPrice += item.addonPrice;
         }
       });

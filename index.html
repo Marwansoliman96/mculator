@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -42,8 +43,13 @@
       --radius-sm: 12px;
     }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
@@ -56,7 +62,11 @@
       line-height: 1.5;
     }
 
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
     ::-webkit-scrollbar-thumb {
       background: linear-gradient(180deg, var(--secondary), var(--accent));
       border-radius: 999px;
@@ -203,8 +213,12 @@
 
     .form-layout {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
+    }
+
+    .city-card {
+      grid-column: 1 / -1;
     }
 
     .sub-grid {
@@ -301,17 +315,13 @@
     }
 
     textarea {
-      min-height: 150px;
+      min-height: 200px;
       padding: 0.9rem 1rem;
       resize: vertical;
       line-height: 1.6;
       font-size: 0.84rem;
       font-family: Consolas, "Courier New", monospace;
       background: #fcfafc;
-    }
-
-    #orderData {
-      min-height: 220px;
     }
 
     textarea:focus,
@@ -414,7 +424,7 @@
     .reset-btn:focus-visible {
       outline: none;
       box-shadow:
-        0 0 0 4px rgba(255,255,255,0.35),
+        0 0 0 4px rgba(255, 255, 255, 0.35),
         0 0 0 8px rgba(141, 59, 110, 0.20);
     }
 
@@ -429,7 +439,7 @@
     .reset-btn {
       background: rgba(255, 255, 255, 0.14);
       color: #fff;
-      border: 1px solid rgba(255,255,255,0.18);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       min-width: 150px;
       backdrop-filter: blur(6px);
       box-shadow: 0 10px 22px rgba(64, 24, 49, 0.14);
@@ -455,7 +465,7 @@
       position: absolute;
       width: 280px;
       height: 280px;
-      background: radial-gradient(circle, rgba(240,165,95,0.14) 0%, rgba(240,165,95,0) 72%);
+      background: radial-gradient(circle, rgba(240, 165, 95, 0.14) 0%, rgba(240, 165, 95, 0) 72%);
       top: -80px;
       left: -100px;
       pointer-events: none;
@@ -484,18 +494,18 @@
 
     .dashboard-head p {
       margin: 7px 0 0;
-      color: rgba(255,255,255,0.74);
+      color: rgba(255, 255, 255, 0.74);
       font-size: 0.87rem;
     }
 
     .dashboard-badge {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 14px;
       padding: 10px 12px;
       font-size: 0.8rem;
       font-weight: 800;
-      color: rgba(255,255,255,0.9);
+      color: rgba(255, 255, 255, 0.9);
     }
 
     .dashboard-grid {
@@ -507,8 +517,8 @@
     }
 
     .dashboard-stat {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       backdrop-filter: blur(6px);
       padding: 18px;
       color: #fff;
@@ -516,15 +526,15 @@
     }
 
     .dashboard-stat.featured {
-      background: rgba(255,255,255,0.16);
-      border-color: rgba(255,255,255,0.22);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
 
     .dashboard-stat .label {
       display: block;
       font-size: 0.84rem;
-      color: rgba(255,255,255,0.78);
+      color: rgba(255, 255, 255, 0.78);
       margin-bottom: 8px;
       font-weight: 800;
     }
@@ -542,7 +552,7 @@
       display: block;
       margin-top: 8px;
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.64);
+      color: rgba(255, 255, 255, 0.64);
     }
 
     .results-card {
@@ -621,7 +631,8 @@
       font-size: 0.9rem;
     }
 
-    th, td {
+    th,
+    td {
       padding: 0.9rem 1rem;
       text-align: center;
       border-bottom: 1px solid #e6dde6;
@@ -639,8 +650,13 @@
       border-bottom: 1px solid var(--border-strong);
     }
 
-    th:first-child { border-top-right-radius: 14px; }
-    th:last-child { border-top-left-radius: 14px; }
+    th:first-child {
+      border-top-right-radius: 14px;
+    }
+
+    th:last-child {
+      border-top-left-radius: 14px;
+    }
 
     tbody tr {
       transition: background-color 0.15s ease;
@@ -740,21 +756,143 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .glow {
       box-shadow:
-        0 0 0 3px rgba(240,165,95,0.08),
+        0 0 0 3px rgba(240, 165, 95, 0.08),
         0 18px 42px rgba(79, 29, 61, 0.20);
       transition: box-shadow 0.35s ease;
     }
 
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(36, 22, 32, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      width: calc(100% - 40px);
+      max-width: 400px;
+      box-shadow: var(--shadow-md);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--primary-strong);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-desc {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(141, 59, 110, 0.2);
+    }
+
+    .invoice-display-card {
+      background: linear-gradient(135deg, #fdfbfd 0%, #f6f0f6 100%);
+      border: 1px solid var(--secondary);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(141, 59, 110, 0.1);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .invoice-item {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .invoice-item .label {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      font-weight: 800;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .invoice-item .value {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--primary-strong);
+      display: block;
+    }
+
     @media (max-width: 1100px) {
+
       .sub-grid,
-      .dashboard-grid {
+      .dashboard-grid,
+      .form-layout {
         grid-template-columns: 1fr;
+      }
+
+      .city-card {
+        grid-column: auto;
       }
     }
 
@@ -828,6 +966,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="page-shell">
     <div class="page-stack">
@@ -841,10 +980,11 @@
                 منصة تدقيق التسعير
               </div>
 
-              <h1 class="hero-title">Mculator v1</h1>
+              <h1 class="hero-title">Mculator v2</h1>
 
               <p class="hero-subtitle">
-                حل داخلي مبتكر لأتمتة مراجعة التسعير، يهدف إلى تعزيز الدقة التشغيلية تقليل الاخطاء البشرية عبر مسارات عمل ذكية وتقارير شفافة وقابلة للتدقيق.
+                حل داخلي مبتكر لأتمتة مراجعة التسعير، يهدف إلى تعزيز الدقة التشغيلية تقليل الاخطاء البشرية عبر مسارات
+                عمل ذكية وتقارير شفافة وقابلة للتدقيق.
               </p>
             </div>
 
@@ -865,7 +1005,7 @@
       </section>
 
       <section class="form-layout">
-        <div class="card input-card city-card fade-in">
+        <div id="citySelectionCard" class="card input-card city-card fade-in" style="display: none;">
           <div class="city-copy">
             <div class="section-title">
               <i class="fas fa-city" style="color: var(--secondary);"></i>
@@ -908,43 +1048,34 @@
           </div>
         </div>
 
-        <div class="card input-card primary-card fade-in" style="animation-delay: 0.06s;">
+        <div class="card input-card fade-in" style="animation-delay: 0.1s;">
           <div class="section-title">
-            <i class="fas fa-receipt" style="color: var(--secondary);"></i>
-            Dishes Table
+            <i class="fas fa-file-invoice-dollar" style="color: var(--secondary);"></i>
+            بيانات الفاتورة (Invoice Details)
           </div>
           <p class="section-desc">
-            هذا هو الحقل الأساسي في الصفحة. الصق هنا بيانات الطلب كاملة، ثم شغّل التدقيق للحصول على النتائج النهائية.
-          </p>
+يرجى لصق بيانات الفاتورة (الصفحة كاملة لتقليل الخطوات)
 
-          <label class="form-label" for="orderData">الصق بيانات الطلب</label>
-          <textarea id="orderData" placeholder="الصق بيانات الطلب هنا"></textarea>
-          <p class="form-hint">
-          </p>
+          <label class="form-label" for="invoiceInput">تفاصيل الفاتورة</label>
+          <textarea id="invoiceInput" placeholder="Invoice #...&#10;Order Info:..."></textarea>
         </div>
 
-        <div class="sub-grid">
-          <div class="card input-card fade-in" style="animation-delay: 0.1s;">
-            <div class="section-title">
-              <i class="fas fa-exclamation-triangle" style="color: var(--secondary);"></i>
-              Variety Table (Fallback)
-            </div>
-
-            <label class="form-label" for="fallbackInput"> جدول الاحجام</label>
-            <textarea id="fallbackInput" placeholder="ItemId    Size"></textarea>
-            <p class="form-hint"></p>
+        <div class="card input-card primary-card fade-in" style="animation-delay: 0.06s;">
+          <div class="section-title">
+            <i class="fas fa-layer-group" style="color: var(--secondary);"></i>
+            البيانات الذكية (Smart Input)
           </div>
+          <p class="section-desc">
+            الصق جميع البيانات مرة واحدة هنا (الأطباق، الأحجام، والإضافات متضمنة العناوين)    
+           
+          </p>
 
-          <div class="card input-card fade-in" style="animation-delay: 0.14s;">
-            <div class="section-title">
-              <i class="fas fa-cheese" style="color: var(--secondary);"></i>
-              Customer Option Table
-            </div>
-
-            <label class="form-label" for="addonsInput">جدول الإضافات</label>
-            <textarea id="addonsInput" placeholder="الصق جدول الاضافات هنا"></textarea>
-            <p class="form-hint"></p>
-          </div>
+          <label class="form-label" for="orderData">بيانات الطلب الشاملة</label>
+          <textarea id="orderData"
+            placeholder="انسخ كل الجداول من الصفحة مع العناوين (Dishes, Variety, Options) والصقها هنا مرة واحدة..."></textarea>
+          <p class="form-hint">
+            يتم التعرف التلقائي على الجداول بناءً على الأعمدة والعناوين.
+          </p>
         </div>
       </section>
 
@@ -954,6 +1085,9 @@
           Run Full Audit
         </button>
       </div>
+
+      <section class="invoice-display-card fade-in" id="invoiceDisplay" style="display: none;">
+      </section>
 
       <section class="dashboard-panel" id="dashboardCard">
         <div class="dashboard-head">
@@ -1046,11 +1180,11 @@
   </div>
 
   <script>
-    let db = null;
     let dbLoaded = false;
     let mainTable = [];
     let fallbackTable = [];
     let addonsMap = {};
+    let invoiceData = null;
 
     const DB_FILE_NAME = "menu_database.db";
     const ADDON_UNIT_PRICE = 1.5;
@@ -1283,11 +1417,11 @@
       mainTable = [];
       fallbackTable = [];
       addonsMap = {};
+      invoiceData = null;
 
       document.getElementById("citySelect").value = "";
       document.getElementById("orderData").value = "";
-      document.getElementById("fallbackInput").value = "";
-      document.getElementById("addonsInput").value = "";
+      document.getElementById("invoiceInput").value = "";
 
       document.querySelectorAll(".city-chip").forEach((chip) => {
         chip.classList.remove("active");
@@ -1296,8 +1430,13 @@
       document.getElementById("selectedCityNote").innerHTML =
         `المدينة المختارة: <strong>لم يتم الاختيار بعد</strong>`;
 
+      const cityCard = document.getElementById("citySelectionCard");
+      if (cityCard) cityCard.style.display = "none";
+
       document.getElementById("results").innerHTML = getEmptyResultsMarkup();
       document.getElementById("dashboard").innerHTML = getDefaultDashboardMarkup();
+      document.getElementById("invoiceDisplay").style.display = "none";
+      document.getElementById("invoiceDisplay").innerHTML = "";
 
       if (dbLoaded) {
         setStatus("قاعدة البيانات جاهزة. يمكنك بدء التدقيق الآن.", "success");
@@ -1306,6 +1445,120 @@
       }
 
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function parseInvoiceData(rawText) {
+      invoiceData = null;
+      if (!rawText.trim()) return;
+
+      const lines = rawText.split('\n').map(line => line.trim()).filter(Boolean);
+
+      let chefName = "";
+      let orderNumber = "";
+      let invoiceNumber = "";
+      let billTotal = "";
+      let driverAmount = "";
+      let difference = "";
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === "Chef Name" && i + 1 < lines.length) {
+          chefName = lines[i + 1];
+        } else if (line === "Order Number" && i + 1 < lines.length) {
+          orderNumber = lines[i + 1];
+        } else if ((line === "Invoice Number" || line === "Invoice #") && i + 1 < lines.length) {
+          invoiceNumber = lines[i + 1];
+        } else if (line === "Bill Total:" && i + 1 < lines.length) {
+          billTotal = lines[i + 1];
+        } else if (line === "Driver Amount:" && i + 1 < lines.length) {
+          driverAmount = lines[i + 1];
+        } else if ((line === "Differance:" || line === "Difference:") && i + 1 < lines.length) {
+          difference = lines[i + 1];
+        }
+      }
+
+      if (chefName || orderNumber || invoiceNumber || billTotal || driverAmount || difference) {
+        invoiceData = {
+          chefName,
+          orderNumber,
+          invoiceNumber,
+          billTotal,
+          driverAmount,
+          difference
+        };
+      }
+    }
+
+    function renderInvoiceData(city) {
+      const container = document.getElementById("invoiceDisplay");
+      if (!invoiceData) {
+        container.style.display = "none";
+        return;
+      }
+
+      const totalItems = mainTable.reduce((sum, item) => sum + (item.finalPrice - item.addonPrice), 0);
+      const totalAddons = mainTable.reduce((sum, item) => sum + item.addonPrice, 0);
+      const grandTotal = totalItems + totalAddons;
+
+      const parsedBillTotal = parseFloat(String(invoiceData.billTotal).replace(/[^0-9.-]+/g, "")) || 0;
+      const sysVariance = parsedBillTotal - grandTotal;
+      let sysVarianceMarkup = "";
+
+      if (parsedBillTotal > 0) {
+        if (Math.abs(sysVariance) < 0.01) {
+          sysVarianceMarkup = `
+            <div class="invoice-item fade-in" style="animation-delay: 0.25s; border-color: #2ecc71; background: var(--success-tint);">
+              <span class="label">فرق التسعير (System Variance)</span>
+              <span class="value" style="color: #27ae60;">متطابق 100%</span>
+            </div>
+          `;
+        } else {
+          const sign = sysVariance > 0 ? "+" : "";
+          sysVarianceMarkup = `
+            <div class="invoice-item fade-in" style="animation-delay: 0.25s; border-color: #e74c3c; background: var(--danger-tint);">
+              <span class="label">فرق التسعير (System Variance)</span>
+              <span class="value" style="color: #c0392b;">${sign}${sysVariance.toFixed(2)} SAR</span>
+            </div>
+          `;
+        }
+      }
+
+      container.style.display = "grid";
+      const invoiceNumberMarkup = invoiceData.invoiceNumber ? `
+        <div class="invoice-item fade-in" style="animation-delay: 0.02s;">
+          <span class="label">رقم الفاتورة (Invoice Number)</span>
+          <span class="value">${escapeHtml(invoiceData.invoiceNumber)}</span>
+        </div>
+      ` : "";
+
+      container.innerHTML = `
+        <div class="invoice-item fade-in">
+          <span class="label">رقم الطلب (Order Number)</span>
+          <span class="value">${escapeHtml(invoiceData.orderNumber) || "-"}</span>
+        </div>
+        ${invoiceNumberMarkup}
+        <div class="invoice-item fade-in" style="animation-delay: 0.05s;">
+          <span class="label">اسم الفرع (Chef Name)</span>
+          <span class="value">${escapeHtml(invoiceData.chefName) || "-"}</span>
+        </div>
+        <div class="invoice-item fade-in" style="animation-delay: 0.07s;">
+          <span class="label">المدينة (City)</span>
+          <span class="value">${escapeHtml(city) || "-"}</span>
+        </div>
+        <div class="invoice-item fade-in" style="animation-delay: 0.1s;">
+          <span class="label">إجمالي الفاتورة (Bill Total)</span>
+          <span class="value">${escapeHtml(invoiceData.billTotal) || "-"}</span>
+        </div>
+        <div class="invoice-item fade-in" style="animation-delay: 0.15s;">
+          <span class="label">قيمة الحوالة (Driver Amount)</span>
+          <span class="value">${escapeHtml(invoiceData.driverAmount) || "-"}</span>
+        </div>
+        <div class="invoice-item fade-in" style="animation-delay: 0.2s;">
+          <span class="label">الفرق  (Differance)</span>
+          <span class="value">${escapeHtml(invoiceData.difference) || "-"}</span>
+        </div>
+        ${sysVarianceMarkup}
+      `;
     }
 
     function parseFallbackTable(rawText) {
@@ -1354,48 +1607,108 @@
     }
 
     function parseAddonsTable(rawText) {
-  addonsMap = {};
-  if (!rawText) return;
+      addonsMap = {};
+      if (!rawText) return;
 
-  const lines = String(rawText)
-    .replace(/\r/g, "")
-    .split("\n")
-    .map((line) => cleanCell(line))
-    .filter(Boolean);
+      const lines = String(rawText)
+        .replace(/\r/g, "")
+        .split("\n")
+        .map((line) => cleanCell(line))
+        .filter(Boolean);
 
-  if (!lines.length) return;
+      if (!lines.length) return;
 
-  let startIndex = 0;
-  if (isLikelyAddonsHeader(splitTsvRow(lines[0]))) {
-    startIndex = 1;
-  }
+      let startIndex = 0;
+      if (isLikelyAddonsHeader(splitTsvRow(lines[0]))) {
+        startIndex = 1;
+      }
 
-  for (let index = startIndex; index < lines.length; index += 1) {
-    const cols = splitTsvRow(lines[index]);
-    if (cols.length < 5) continue;
+      for (let index = startIndex; index < lines.length; index += 1) {
+        const cols = splitTsvRow(lines[index]);
+        if (cols.length < 5) continue;
 
-    const itemId = normalizeItemId(cols[0]);
-    const addonName = normalizeText(cols[2]);
-    const qty = parseNumber(cols[3], 0);
-    const addonSourcePrice = parseNumber(cols[4], 0);
+        const itemId = normalizeItemId(cols[0]);
+        const addonName = normalizeText(cols[2]);
+        const qty = parseNumber(cols[3], 0);
+        const addonSourcePrice = parseNumber(cols[4], 0);
 
-    if (!itemId || !addonName || qty <= 0) {
-      continue;
+        if (!itemId || !addonName || qty <= 0) {
+          continue;
+        }
+
+        if (!addonsMap[itemId]) {
+          addonsMap[itemId] = {
+            addons: []
+          };
+        }
+
+        addonsMap[itemId].addons.push({
+          addonName,
+          qty,
+          addonSourcePrice
+        });
+      }
     }
 
-    if (!addonsMap[itemId]) {
-      addonsMap[itemId] = {
-        addons: []
+    function parseAllData(rawText) {
+      const lines = String(rawText).replace(/\r/g, "").split("\n").map(line => cleanCell(line));
+
+      const dishesLines = [];
+      const fallbackLines = [];
+      const addonsLines = [];
+
+      let currentSection = 'dishes';
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line.trim()) continue;
+
+        const cols = splitTsvRow(line);
+        const combined = cols.join(" ").toLowerCase();
+        const hasNumberInFirstCol = !!normalizeItemId(cols[0]);
+
+        if (hasNumberInFirstCol) {
+          // Data row: Infer section based on column count
+          if (cols.length >= 8) {
+            currentSection = 'dishes';
+            dishesLines.push(line);
+          } else if (cols.length >= 5) {
+            currentSection = 'addons';
+            addonsLines.push(line);
+          } else if (cols.length >= 2 && cols.length <= 3) {
+            currentSection = 'fallback';
+            fallbackLines.push(line);
+          } else {
+            // Unrecognized length, put in current section
+            if (currentSection === 'dishes') dishesLines.push(line);
+            else if (currentSection === 'fallback') fallbackLines.push(line);
+            else if (currentSection === 'addons') addonsLines.push(line);
+          }
+        } else {
+          // Header row or section title: detect from keywords
+          if (combined.includes("variety") || combined.includes("احجام") || combined.includes("أحجام") || (combined.includes("size") && cols.length <= 4)) {
+            currentSection = 'fallback';
+            fallbackLines.push(line);
+          } else if (combined.includes("customer option") || combined.includes("addon") || combined.includes("اضاف") || combined.includes("إضاف") || combined.includes("option")) {
+            currentSection = 'addons';
+            addonsLines.push(line);
+          } else if (combined.includes("dishes") || combined.includes("اطباق") || combined.includes("أطباق") || cols.length >= 8) {
+            currentSection = 'dishes';
+            dishesLines.push(line);
+          } else {
+            if (currentSection === 'dishes') dishesLines.push(line);
+            else if (currentSection === 'fallback') fallbackLines.push(line);
+            else if (currentSection === 'addons') addonsLines.push(line);
+          }
+        }
+      }
+
+      return {
+        dishesRaw: dishesLines.join("\n"),
+        fallbackRaw: fallbackLines.join("\n"),
+        addonsRaw: addonsLines.join("\n")
       };
     }
-
-    addonsMap[itemId].addons.push({
-      addonName,
-      qty,
-      addonSourcePrice
-    });
-  }
-}
 
     function buildMainTable(orderRaw, city, area) {
       mainTable = [];
@@ -1610,32 +1923,79 @@
         return;
       }
 
-      const city = document.getElementById("citySelect").value.trim();
-      if (!city) {
-        alert("اختر المدينة");
-        return;
-      }
-
-      const area = getArea(city);
-      if (!area) {
-        alert("لم يتم العثور على Area للمدينة المختارة داخل قاعدة البيانات.");
-        return;
-      }
-
       const orderRaw = document.getElementById("orderData").value.trim();
       if (!orderRaw) {
         alert("ادخل بيانات الطلب");
         return;
       }
 
+      const invoiceRaw = document.getElementById("invoiceInput").value.trim();
+      parseInvoiceData(invoiceRaw);
+
+      let city = document.getElementById("citySelect").value.trim();
+      let area = null;
+      let branchFound = false;
+      const cityCard = document.getElementById("citySelectionCard");
+
+      if (invoiceData && invoiceData.chefName) {
+        let stmt = null;
+        try {
+          stmt = db.prepare("SELECT City, Area FROM branch_info WHERE Branch=?");
+          stmt.bind([invoiceData.chefName]);
+          if (stmt.step()) {
+            const rowData = stmt.getAsObject();
+            city = rowData.City;
+            area = rowData.Area;
+            branchFound = true;
+
+            document.getElementById("citySelect").value = city;
+            document.querySelectorAll(".city-chip").forEach((chip) => {
+              if (chip.dataset.city === city) {
+                chip.classList.add("active");
+              } else {
+                chip.classList.remove("active");
+              }
+            });
+            document.getElementById("selectedCityNote").innerHTML =
+              `المدينة المختارة (تلقائياً): <strong style="color:var(--secondary);">${escapeHtml(city)}</strong>`;
+          }
+        } catch (error) {
+          console.error("Failed to read branch_info:", error);
+        } finally {
+          if (stmt) stmt.free();
+        }
+      }
+
+      if (!branchFound || !city) {
+        if (cityCard) cityCard.style.display = "block";
+        if (!city) {
+          alert("الفرع غير مسجل أو لم يتم إدخال فاتورة. يرجى اختيار المدينة يدوياً.");
+          return;
+        }
+      } else {
+        if (cityCard) cityCard.style.display = "none";
+      }
+
+      if (!area) {
+        area = getArea(city);
+        if (!area) {
+          alert("لم يتم العثور على Area للمدينة المختارة داخل قاعدة البيانات.");
+          return;
+        }
+      }
+
       try {
-        buildMainTable(orderRaw, city, area);
-        parseFallbackTable(document.getElementById("fallbackInput").value.trim());
+        const parsed = parseAllData(orderRaw);
+
+        buildMainTable(parsed.dishesRaw, city, area);
+        parseFallbackTable(parsed.fallbackRaw);
         applyFallbackSizes();
-        parseAddonsTable(document.getElementById("addonsInput").value.trim());
+        parseAddonsTable(parsed.addonsRaw);
         applyFallbackPricingAndAddons();
+
         renderResults();
         renderDashboard();
+        renderInvoiceData(city);
         setStatus("تم تنفيذ التدقيق بنجاح وتحديث النتائج.", "success");
       } catch (error) {
         console.error("Audit failed:", error);
@@ -1655,4 +2015,5 @@
     };
   </script>
 </body>
+
 </html>

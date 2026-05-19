@@ -1054,10 +1054,10 @@
             بيانات الفاتورة (Invoice Details)
           </div>
           <p class="section-desc">
-يرجى لصق بيانات الفاتورة (الصفحة كاملة لتقليل الخطوات)
+            يرجى لصق بيانات الفاتورة (الصفحة كاملة لتقليل الخطوات)
 
-          <label class="form-label" for="invoiceInput">تفاصيل الفاتورة</label>
-          <textarea id="invoiceInput" placeholder="Invoice #...&#10;Order Info:..."></textarea>
+            <label class="form-label" for="invoiceInput">تفاصيل الفاتورة</label>
+            <textarea id="invoiceInput" placeholder="Invoice #...&#10;Order Info:..."></textarea>
         </div>
 
         <div class="card input-card primary-card fade-in" style="animation-delay: 0.06s;">
@@ -1066,8 +1066,8 @@
             البيانات من البورتال (Smart Input)
           </div>
           <p class="section-desc">
-            الصق جميع البيانات مرة واحدة هنا (الأطباق، الأحجام، والإضافات متضمنة العناوين)    
-           
+            الصق جميع البيانات مرة واحدة هنا (الأطباق، الأحجام، والإضافات متضمنة العناوين)
+
           </p>
 
           <label class="form-label" for="orderData">بيانات الطلب الشاملة</label>
@@ -1184,7 +1184,7 @@
             مرحباً بك في Mculator
           </div>
           <p class="modal-desc">
-           رجاء ادخال اسم المستخدم 
+            رجاء ادخال اسم المستخدم
           </p>
           <label class="form-label">الاسم</label>
           <input type="text" id="auditorNameInput" placeholder="اكتب اسمك هنا..." style="padding: 12px;" />
@@ -1935,7 +1935,7 @@
       setTimeout(() => dash.classList.remove("glow"), 600);
     }
 
-    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE"; // استبدل هذا الرابط
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFAS3ia5VcdK4jPmFwbTXJDM60d9XTVxVtRgMIRomQOjnIZNrGweRi3DTzHujpFfYa/exec"; // استبدل هذا الرابط
 
     async function logAuditToSheet(city, branch, orderNumber, invoiceNumber, billTotal, grandTotal, invoiceDifference, systemVariance) {
       const auditorName = localStorage.getItem("mculator_auditor_name") || "غير محدد";
@@ -1961,11 +1961,14 @@
           method: "POST",
           mode: "no-cors",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain;charset=utf-8"
           },
           body: JSON.stringify(payload)
+        }).then(() => {
+          console.log("Audit logged to sheet.");
+        }).catch(err => {
+          console.error("Fetch error:", err);
         });
-        console.log("Audit logged to sheet.");
       } catch (err) {
         console.error("Error logging to sheet:", err);
       }
@@ -2060,12 +2063,12 @@
         const variance = parsedBillTotal - grandTotal;
 
         logAuditToSheet(
-          city, 
-          invoiceData?.chefName, 
-          invoiceData?.orderNumber, 
-          invoiceData?.invoiceNumber, 
-          parsedBillTotal, 
-          grandTotal, 
+          city,
+          invoiceData?.chefName,
+          invoiceData?.orderNumber,
+          invoiceData?.invoiceNumber,
+          parsedBillTotal,
+          grandTotal,
           invoiceData?.difference,
           variance
         );
@@ -2084,7 +2087,7 @@
       if (!savedName) {
         document.getElementById("nameModal").classList.add("active");
       }
-      
+
       document.getElementById("saveNameBtn").addEventListener("click", () => {
         const nameInput = document.getElementById("auditorNameInput").value.trim();
         if (nameInput) {

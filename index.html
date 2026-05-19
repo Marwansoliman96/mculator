@@ -1176,6 +1176,24 @@
         </div>
       </footer>
 
+      <!-- Name Modal -->
+      <div class="modal-overlay" id="nameModal">
+        <div class="modal-content">
+          <div class="modal-title">
+            <i class="fas fa-user-circle" style="color: var(--secondary);"></i>
+            مرحباً بك في Mculator
+          </div>
+          <p class="modal-desc">
+           رجاء ادخال اسم المستخدم 
+          </p>
+          <label class="form-label">الاسم</label>
+          <input type="text" id="auditorNameInput" placeholder="اكتب اسمك هنا..." style="padding: 12px;" />
+          <div class="modal-actions">
+            <button class="modal-btn" id="saveNameBtn">حفظ والمتابعة</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1917,6 +1935,42 @@
       setTimeout(() => dash.classList.remove("glow"), 600);
     }
 
+    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE"; // استبدل هذا الرابط
+
+    async function logAuditToSheet(city, branch, orderNumber, invoiceNumber, billTotal, grandTotal, invoiceDifference, systemVariance) {
+      const auditorName = localStorage.getItem("mculator_auditor_name") || "غير محدد";
+      const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Asia/Riyadh" });
+
+      const payload = {
+        timestamp,
+        auditorName,
+        invoiceNumber: invoiceNumber || "-",
+        orderNumber: orderNumber || "-",
+        branchName: branch || "-",
+        city: city || "-",
+        billTotal: billTotal,
+        grandTotal: grandTotal,
+        invoiceDifference: invoiceDifference || "-",
+        systemVariance: systemVariance
+      };
+
+      if (GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return;
+
+      try {
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        console.log("Audit logged to sheet.");
+      } catch (err) {
+        console.error("Error logging to sheet:", err);
+      }
+    }
+
     function runFullAudit() {
       if (!dbLoaded || !db) {
         alert("قاعدة البيانات لم يتم تحميلها بعد.");
@@ -1997,6 +2051,24 @@
         renderDashboard();
         renderInvoiceData(city);
         setStatus("تم تنفيذ التدقيق بنجاح وتحديث النتائج.", "success");
+
+        // حساب المتغيرات لإرسالها
+        const totalItems = mainTable.reduce((sum, item) => sum + (item.finalPrice - item.addonPrice), 0);
+        const totalAddons = mainTable.reduce((sum, item) => sum + item.addonPrice, 0);
+        const grandTotal = totalItems + totalAddons;
+        const parsedBillTotal = parseFloat(String(invoiceData?.billTotal).replace(/[^0-9.-]+/g, "")) || 0;
+        const variance = parsedBillTotal - grandTotal;
+
+        logAuditToSheet(
+          city, 
+          invoiceData?.chefName, 
+          invoiceData?.orderNumber, 
+          invoiceData?.invoiceNumber, 
+          parsedBillTotal, 
+          grandTotal, 
+          invoiceData?.difference,
+          variance
+        );
       } catch (error) {
         console.error("Audit failed:", error);
         setStatus("حدث خطأ أثناء تنفيذ التدقيق. راجع Console للتفاصيل.", "error");
@@ -2007,10 +2079,28 @@
     document.getElementById("auditBtn").addEventListener("click", runFullAudit);
     document.getElementById("resetBtn").addEventListener("click", resetForm);
 
+    function initAuditorName() {
+      const savedName = localStorage.getItem("mculator_auditor_name");
+      if (!savedName) {
+        document.getElementById("nameModal").classList.add("active");
+      }
+      
+      document.getElementById("saveNameBtn").addEventListener("click", () => {
+        const nameInput = document.getElementById("auditorNameInput").value.trim();
+        if (nameInput) {
+          localStorage.setItem("mculator_auditor_name", nameInput);
+          document.getElementById("nameModal").classList.remove("active");
+        } else {
+          alert("الرجاء إدخال الاسم للمتابعة.");
+        }
+      });
+    }
+
     window.onload = async function () {
       document.getElementById("dashboard").innerHTML = getDefaultDashboardMarkup();
       document.getElementById("results").innerHTML = getEmptyResultsMarkup();
       initCitySelection();
+      initAuditorName();
       await initDB();
     };
   </script>

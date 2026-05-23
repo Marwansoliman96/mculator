@@ -1749,6 +1749,7 @@
         if (cols.length < 8) continue;
 
         const itemId = normalizeItemId(cols[0]);
+        const dishId = normalizeItemId(cols[1]);
         const name = normalizeText(cols[2]);
         const quantity = parseNumber(cols[7], 1);
 
@@ -1756,6 +1757,7 @@
 
         const item = {
           itemId,
+          dishId,
           name,
           quantity: quantity > 0 ? quantity : 1,
           city,

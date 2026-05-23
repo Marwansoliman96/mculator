@@ -1603,7 +1603,7 @@
         const itemId = normalizeItemId(cols[0]);
         const size = normalizeText(cols[1]);
 
-        if (itemId && size) {
+        if (itemId && itemId.length >= 5 && size) {
           fallbackTable.push({ itemId, size });
         }
       }
@@ -1657,7 +1657,7 @@
         const qty = parseNumber(cols[3], 0);
         const addonSourcePrice = parseNumber(cols[4], 0);
 
-        if (!itemId || !addonName || qty <= 0) {
+        if (!itemId || itemId.length < 5 || !addonName || qty <= 0) {
           continue;
         }
 
@@ -1753,7 +1753,9 @@
         const name = normalizeText(cols[2]);
         const quantity = parseNumber(cols[7], 1);
 
-        if (!itemId || !name) continue;
+        if (!itemId || !dishId || !name) continue;
+        // Strict check to ignore randomly copied text: valid IDs are long numbers
+        if (itemId.length < 5 || dishId.length < 4) continue;
 
         const item = {
           itemId,

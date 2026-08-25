@@ -1609,11 +1609,47 @@
       }
     }
 
+    function getItemPriceFromDb(name, area) {
+      if (!dbLoaded || !db || !name || !area) return 0;
+
+      let stmt = null;
+      try {
+        // 1. Exact match
+        stmt = db.prepare("SELECT Area1, Area2 FROM full_menu_data WHERE Name=?");
+        stmt.bind([name]);
+
+        if (stmt.step()) {
+          const rowData = stmt.getAsObject();
+          return itemAreaToPrice(area, rowData.Area1, rowData.Area2);
+        }
+
+        // 2. Resilient English prefix match
+        const engPart = name.split(" - ")[0].trim();
+        if (engPart) {
+          stmt.free();
+          stmt = db.prepare("SELECT Area1, Area2 FROM full_menu_data WHERE Name LIKE ?");
+          stmt.bind([engPart + "%"]);
+
+          if (stmt.step()) {
+            const rowData = stmt.getAsObject();
+            return itemAreaToPrice(area, rowData.Area1, rowData.Area2);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to query full_menu_data for:", name, error);
+      } finally {
+        if (stmt) stmt.free();
+      }
+
+      return 0;
+    }
+
     function getSpecialAddonUnitPrice(mealName, addonName, area) {
       if (!dbLoaded || !db || !mealName || !addonName || !area) return null;
 
       let stmt = null;
       try {
+        // 1. Exact match
         stmt = db.prepare("SELECT Area1, Area2 FROM special_addons WHERE MealName=? AND AddonName=?");
         stmt.bind([mealName, addonName]);
 
@@ -1621,6 +1657,27 @@
           const rowData = stmt.getAsObject();
           const specialPrice = itemAreaToPrice(area, rowData.Area1, rowData.Area2);
           return specialPrice > 0 ? specialPrice : null;
+        }
+
+        // 2. Resilient English prefix/part match
+        const engMeal = mealName.split(" - ")[0].trim();
+        let engAddon = addonName;
+        if (addonName.includes("|")) {
+          engAddon = addonName.split("|").pop().trim();
+        } else if (addonName.includes("-")) {
+          engAddon = addonName.split("-")[0].trim();
+        }
+
+        if (engMeal) {
+          stmt.free();
+          stmt = db.prepare("SELECT Area1, Area2 FROM special_addons WHERE MealName LIKE ? AND (AddonName LIKE ? OR AddonName=?)");
+          stmt.bind([engMeal + "%", "%" + engAddon + "%", addonName]);
+
+          if (stmt.step()) {
+            const rowData = stmt.getAsObject();
+            const specialPrice = itemAreaToPrice(area, rowData.Area1, rowData.Area2);
+            return specialPrice > 0 ? specialPrice : null;
+          }
         }
       } catch (error) {
         console.error("Failed to read special_addons for:", mealName, addonName, error);
@@ -1631,174 +1688,153 @@
       return null;
     }
 
-    function parseAddonsTable(rawText) {
-      addonsMap = {};
-      if (!rawText) return;
+    function isVerticalFormat(rawText) {
+      return /Item\s+\d+[\s\S]*?Dish\s+\d+/i.test(rawText) || /Dishes\s*[\r\n]+/i.test(rawText);
+    }
 
+    function parseVerticalData(rawText) {
       const lines = String(rawText)
         .replace(/\r/g, "")
         .split("\n")
         .map((line) => cleanCell(line))
         .filter(Boolean);
 
-      if (!lines.length) return;
+      const extractedDishes = [];
+      const extractedAddonsMap = {};
+      const extractedFallbackTable = [];
 
-      let startIndex = 0;
-      if (isLikelyAddonsHeader(splitTsvRow(lines[0]))) {
-        startIndex = 1;
-      }
-
-      for (let index = startIndex; index < lines.length; index += 1) {
-        const cols = splitTsvRow(lines[index]);
-        if (cols.length < 5) continue;
-
-        const itemId = normalizeItemId(cols[0]);
-        const addonName = normalizeText(cols[2]);
-        const qty = parseNumber(cols[3], 0);
-        const addonSourcePrice = parseNumber(cols[4], 0);
-
-        if (!itemId || itemId.length < 5 || !addonName || qty <= 0) {
-          continue;
-        }
-
-        if (!addonsMap[itemId]) {
-          addonsMap[itemId] = {
-            addons: []
-          };
-        }
-
-        addonsMap[itemId].addons.push({
-          addonName,
-          qty,
-          addonSourcePrice
-        });
-      }
-    }
-
-    function parseAllData(rawText) {
-      const lines = String(rawText).replace(/\r/g, "").split("\n").map(line => cleanCell(line));
-
-      const dishesLines = [];
-      const fallbackLines = [];
-      const addonsLines = [];
-
-      let currentSection = 'dishes';
-
+      // 1. Extract Dishes
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (!line.trim()) continue;
+        const itemDishMatch = line.match(/Item\s+(\d{5,})\s*[·•|-]?\s*Dish\s+(\d{4,})/i);
 
-        const cols = splitTsvRow(line);
-        const combined = cols.join(" ").toLowerCase();
-        const hasNumberInFirstCol = !!normalizeItemId(cols[0]);
+        if (itemDishMatch) {
+          const itemId = itemDishMatch[1];
+          const dishId = itemDishMatch[2];
 
-        if (hasNumberInFirstCol) {
-          // Data row: Infer section based on column count
-          if (cols.length >= 8) {
-            currentSection = 'dishes';
-            dishesLines.push(line);
-          } else if (cols.length >= 5) {
-            currentSection = 'addons';
-            addonsLines.push(line);
-          } else if (cols.length >= 2 && cols.length <= 3) {
-            currentSection = 'fallback';
-            fallbackLines.push(line);
-          } else {
-            // Unrecognized length, put in current section
-            if (currentSection === 'dishes') dishesLines.push(line);
-            else if (currentSection === 'fallback') fallbackLines.push(line);
-            else if (currentSection === 'addons') addonsLines.push(line);
+          // Find dish name from line(s) above
+          let name = "";
+          if (i - 1 >= 0) {
+            let prevLine = lines[i - 1];
+            if (/^\d+$/.test(prevLine) && i - 2 >= 0) {
+              prevLine = lines[i - 2];
+            }
+            name = normalizeText(prevLine).replace(/^[›>•\-\d\s]+/, "").trim();
+            if (!name) name = normalizeText(lines[i - 1]);
           }
-        } else {
-          // Header row or section title: detect from keywords
-          if (combined.includes("variety") || combined.includes("احجام") || combined.includes("أحجام") || (combined.includes("size") && cols.length <= 4)) {
-            currentSection = 'fallback';
-            fallbackLines.push(line);
-          } else if (combined.includes("customer option") || combined.includes("addon") || combined.includes("اضاف") || combined.includes("إضاف") || combined.includes("option")) {
-            currentSection = 'addons';
-            addonsLines.push(line);
-          } else if (combined.includes("dishes") || combined.includes("اطباق") || combined.includes("أطباق") || cols.length >= 8) {
-            currentSection = 'dishes';
-            dishesLines.push(line);
-          } else {
-            if (currentSection === 'dishes') dishesLines.push(line);
-            else if (currentSection === 'fallback') fallbackLines.push(line);
-            else if (currentSection === 'addons') addonsLines.push(line);
+
+          // Find quantity from line(s) below: look for "× Qty" or "x Qty" or "* Qty"
+          let quantity = 1;
+          for (let j = i + 1; j <= Math.min(i + 3, lines.length - 1); j++) {
+            const nextLine = lines[j];
+            const qtyMatch = nextLine.match(/[\timesxX*×]\s*(\d+)/);
+            if (qtyMatch) {
+              quantity = parseNumber(qtyMatch[1], 1);
+              break;
+            }
+          }
+
+          if (itemId && dishId && name) {
+            extractedDishes.push({
+              itemId,
+              dishId,
+              name,
+              quantity: quantity > 0 ? quantity : 1
+            });
+          }
+        }
+      }
+
+      // 2. Extract Customer Options (Addons) & Variety/Sizes
+      if (extractedDishes.length > 0) {
+        let activeDishIndex = -1;
+        let inAddonsSection = false;
+        let inVarietySection = false;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const normLine = normalizeText(line).toLowerCase();
+
+          if (normLine.includes("customer options") || normLine.includes("customer option")) {
+            inAddonsSection = true;
+            inVarietySection = false;
+            continue;
+          }
+
+          if (normLine.includes("variety") || normLine.includes("احجام") || normLine.includes("أحجام")) {
+            inVarietySection = true;
+            inAddonsSection = false;
+            continue;
+          }
+
+          if (normLine.startsWith("▸") || normLine.includes("empty sections") || normLine === "dishes") {
+            inAddonsSection = false;
+            inVarietySection = false;
+            continue;
+          }
+
+          if (inAddonsSection) {
+            // Skip line numbers/bullets
+            if (/^\d+$/.test(line) || line === "›" || line === ">") continue;
+
+            // Check if line matches any dish name in extractedDishes
+            const matchedDishIdx = extractedDishes.findIndex((d) => {
+              const dName = normalizeText(d.name).toLowerCase();
+              return normLine === dName || normLine.includes(dName) || dName.includes(normLine);
+            });
+
+            if (matchedDishIdx !== -1) {
+              activeDishIndex = matchedDishIdx;
+              continue;
+            }
+
+            if (activeDishIndex !== -1) {
+              const activeDish = extractedDishes[activeDishIndex];
+              const itemId = activeDish.itemId;
+
+              // Extract option name and price at end of line (e.g. "Sprite - 308 Cal 0.00")
+              const priceMatch = line.match(/^(.+?)\s+([\d]+(?:\.[\d]+)?)$/);
+              let addonName = line;
+              let addonSourcePrice = 0;
+
+              if (priceMatch) {
+                addonName = normalizeText(priceMatch[1]);
+                addonSourcePrice = parseNumber(priceMatch[2], 0);
+              } else {
+                addonName = normalizeText(line);
+              }
+
+              if (addonName && addonName !== "›" && !addonName.startsWith("▸")) {
+                if (!extractedAddonsMap[itemId]) {
+                  extractedAddonsMap[itemId] = { addons: [] };
+                }
+                extractedAddonsMap[itemId].addons.push({
+                  addonName,
+                  qty: 1,
+                  addonSourcePrice
+                });
+              }
+            }
+          }
+
+          if (inVarietySection) {
+            const cols = splitTsvRow(line);
+            if (cols.length >= 2) {
+              const vItemId = normalizeItemId(cols[0]);
+              const vSize = normalizeText(cols[1]);
+              if (vItemId && vSize) {
+                extractedFallbackTable.push({ itemId: vItemId, size: vSize });
+              }
+            }
           }
         }
       }
 
       return {
-        dishesRaw: dishesLines.join("\n"),
-        fallbackRaw: fallbackLines.join("\n"),
-        addonsRaw: addonsLines.join("\n")
+        dishes: extractedDishes,
+        addonsMap: extractedAddonsMap,
+        fallbackTable: extractedFallbackTable
       };
-    }
-
-    function buildMainTable(orderRaw, city, area) {
-      mainTable = [];
-
-      const lines = String(orderRaw)
-        .replace(/\r/g, "")
-        .split("\n")
-        .map((line) => cleanCell(line))
-        .filter(Boolean);
-
-      for (const row of lines) {
-        const cols = splitTsvRow(row);
-        if (cols.length < 8) continue;
-
-        const itemId = normalizeItemId(cols[0]);
-        const dishId = normalizeItemId(cols[1]);
-        const name = normalizeText(cols[2]);
-        const quantity = parseNumber(cols[7], 1);
-
-        if (!itemId || !dishId || !name) continue;
-        // Strict check to ignore randomly copied text: valid IDs are long numbers
-        if (itemId.length < 5 || dishId.length < 4) continue;
-
-        const item = {
-          itemId,
-          dishId,
-          name,
-          quantity: quantity > 0 ? quantity : 1,
-          city,
-          area,
-          size: "Default",
-          basePrice: 0,
-          finalPrice: 0,
-          needsFallback: false,
-          addonQty: 0,
-          addonPrice: 0,
-          juiceQty: 0,
-          standardAddonQty: 0
-        };
-
-        let stmt = null;
-        try {
-          stmt = db.prepare("SELECT Area1, Area2 FROM full_menu_data WHERE Name=?");
-          stmt.bind([item.name]);
-
-          if (stmt.step()) {
-            const rowData = stmt.getAsObject();
-            const area1 = parseNumber(rowData.Area1, 0);
-            const area2 = parseNumber(rowData.Area2, 0);
-            item.basePrice = item.area === "Area1" ? area1 : area2;
-          }
-        } catch (error) {
-          console.error("Failed to read full_menu_data for item:", item.name, error);
-        } finally {
-          if (stmt) stmt.free();
-        }
-
-        if (!item.basePrice || item.basePrice === 0) {
-          item.needsFallback = true;
-        } else {
-          item.finalPrice = item.basePrice * item.quantity;
-        }
-
-        mainTable.push(item);
-      }
     }
 
     function applyFallbackSizes() {
@@ -1946,7 +1982,7 @@
       setTimeout(() => dash.classList.remove("glow"), 600);
     }
 
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytzdC7UqqQtIukIX5WRgkAkThAH2fC2yUliLLV9QlbGIOeQyV9x3-Hf7S7cGiO24JT/exec"; // استبدل هذا الرابط
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytzdC7UqqQtIukIX5WRgkAkThAH2fC2yUliLLV9QlbGIOeQyV9x3-Hf7S7cGiO24JT/exec";
 
     async function logAuditToSheet(city, branch, orderNumber, invoiceNumber, billTotal, grandTotal, invoiceDifference, systemVariance) {
       const auditorName = localStorage.getItem("mculator_auditor_name") || "غير محدد";
@@ -2065,13 +2101,55 @@
       }
 
       try {
-        const parsed = parseAllData(orderRaw);
+        if (isVerticalFormat(orderRaw)) {
+          const parsed = parseVerticalData(orderRaw);
+          if (!parsed.dishes.length) {
+            setStatus("لم يتم العثور على أطباق صالحة في النص.", "error");
+            alert("لم يتم العثور على أطباق صالحة في النص. يرجى التأكد من نسخ بيانات الطلب كاملة.");
+            return;
+          }
 
-        buildMainTable(parsed.dishesRaw, city, area);
-        parseFallbackTable(parsed.fallbackRaw);
-        applyFallbackSizes();
-        parseAddonsTable(parsed.addonsRaw);
-        applyFallbackPricingAndAddons();
+          mainTable = parsed.dishes.map((d) => {
+            const item = {
+              itemId: d.itemId,
+              dishId: d.dishId,
+              name: d.name,
+              quantity: d.quantity,
+              city,
+              area,
+              size: "Default",
+              basePrice: 0,
+              finalPrice: 0,
+              needsFallback: false,
+              addonQty: 0,
+              addonPrice: 0,
+              juiceQty: 0,
+              standardAddonQty: 0
+            };
+
+            item.basePrice = getItemPriceFromDb(item.name, item.area);
+            if (!item.basePrice || item.basePrice === 0) {
+              item.needsFallback = true;
+            } else {
+              item.finalPrice = item.basePrice * item.quantity;
+            }
+            return item;
+          });
+
+          addonsMap = parsed.addonsMap;
+          fallbackTable = parsed.fallbackTable;
+
+          applyFallbackSizes();
+          applyFallbackPricingAndAddons();
+        } else {
+          const parsed = parseAllData(orderRaw);
+
+          buildMainTable(parsed.dishesRaw, city, area);
+          parseFallbackTable(parsed.fallbackRaw);
+          applyFallbackSizes();
+          parseAddonsTable(parsed.addonsRaw);
+          applyFallbackPricingAndAddons();
+        }
 
         renderResults();
         renderDashboard();
